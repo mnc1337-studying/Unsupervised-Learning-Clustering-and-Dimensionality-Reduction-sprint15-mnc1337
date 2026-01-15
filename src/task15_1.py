@@ -1,63 +1,65 @@
-import random
 import numpy as np
 import matplotlib.pyplot as plt
 
-
 # K-Means Clustering Implementation
 class KMeans:
-    def __init__(self, k=3, max_iters=100):
-        self.k = k  # Number of clusters
-        self.max_iters = max_iters  # Max iterations to converge
-        self.centroids = []  # Cluster centroids
-        self.labels = []  # Labels for data points
-
+    def __init__(self, k=3, max_iters=100, random_state=42):
+        self.k = k
+        self.max_iters = max_iters
+        self.centroids = []
+        self.labels = []
+        self.random_state = random_state
 
     def fit(self, data, initial_centroids=None):
-        """
-        Fits K-Means to the provided data.
-        """
+        data = np.array(data)
 
-        # Assign final labels
-        self.labels = [self.get_cluster_label(point) for point in data]
+        # 1. Initialize centroids
+        if initial_centroids:
+            self.centroids = np.array(initial_centroids)
+        else:
+            rng = np.random.default_rng(self.random_state)
+            indices = rng.choice(len(data), self.k, replace=False)
+            self.centroids = data[indices]
 
+        for iteration in range(self.max_iters):
+            # 2. Assign labels
+            labels = []
+            for point in data:
+                distances = [self.euclidean_distance(point, c) for c in self.centroids]
+                labels.append(np.argmin(distances))
+            labels = np.array(labels)
+
+            # 3. Compute new centroids
+            new_centroids = []
+            for i in range(self.k):
+                cluster_points = data[labels == i]
+                if len(cluster_points) > 0:
+                    new_centroids.append(np.mean(cluster_points, axis=0))
+                else:
+                    # If a cluster has no points, keep old centroid
+                    new_centroids.append(self.centroids[i])
+            new_centroids = np.array(new_centroids)
+
+            # 4. Check convergence
+            if np.allclose(self.centroids, new_centroids):
+                break
+
+            self.centroids = new_centroids
+
+        self.labels = labels.tolist()
+        return self
 
     def predict(self, point):
-        """
-        Predicts the cluster label for a given point.
-        """
-
-        return distances.index(min(distances))
-
-
-    def get_cluster_label(self, point):
-        """
-        Helper function to determine a cluster label.
-        """
-
-        return distances.index(min(distances))
-
+        distances = [self.euclidean_distance(point, c) for c in self.centroids]
+        return np.argmin(distances)
 
     @staticmethod
     def euclidean_distance(point1, point2):
-        """
-        Computes Euclidean distance between two points.
-        """
-        return np.sqrt(sum((x - y) ** 2 for x, y in zip(point1, point2)))
-
-    @staticmethod
-    def compute_centroid(cluster):
-        """
-        Computes the centroid of a cluster.
-        """
-
-        return np.mean(cluster, axis=0).tolist()
+        return np.sqrt(np.sum((np.array(point1) - np.array(point2)) ** 2))
 
 
 # Visualization function
 def plot_clusters(data, labels, centroids):
-    """
-    Visualizes clustered data points.
-    """
     data = np.array(data)
     labels = np.array(labels)
     centroids = np.array(centroids)
@@ -75,17 +77,14 @@ def plot_clusters(data, labels, centroids):
 
 # Main Execution
 if __name__ == "__main__":
-    # Input Data
     data = [
         [15, 39], [15, 81], [16, 6], [16, 77], [17, 40],
         [18, 6], [18, 94], [19, 3], [19, 72], [20, 44]
     ]
 
-    # Step 1: Train K-Means
     kmeans = KMeans(k=3)
     kmeans.fit(data)
 
-    # Step 2: Visualize Results
     print("Centroids:", kmeans.centroids)
     print("Labels:", kmeans.labels)
-    plot_clusters(data, np.array(kmeans.labels), kmeans.centroids)
+    plot_clusters(data, kmeans.labels, kmeans.centroids)
