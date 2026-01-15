@@ -77,6 +77,7 @@ def plot_clusters(data, labels):
     plt.xlabel("X")
     plt.ylabel("Y")
     plt.legend()
+    plt.savefig("task15_2.png")
     plt.show()
 
 

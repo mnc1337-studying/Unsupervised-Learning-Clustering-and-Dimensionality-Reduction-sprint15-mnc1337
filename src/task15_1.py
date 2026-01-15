@@ -72,6 +72,7 @@ def plot_clusters(data, labels, centroids):
     plt.xlabel('Annual Income ($1000)')
     plt.ylabel('Spending Score')
     plt.legend()
+    plt.savefig("task15_1.png")
     plt.show()
 
 
